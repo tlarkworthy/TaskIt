@@ -50,22 +50,34 @@ app.get('/', (req, res) => {
 //   res.render('index', {todosList: todos});
 // });
 
-app.get('/getTodos', (req, res) => {
-  res.send(todos);
+app.post('/getTodos', (req, res) => {
+
+  let username = JSON.parse(req.body).user;
+
+  todosDB.find({user: username}, (err, list) => {
+    if (err) throw err;
+    todos = list;
+
+    res.send(todos);
+  });
+
+
+  
 });
 
 app.post('/setTodos', (req, res) => {
   var body = JSON.parse(req.body);
   //console.log(body.newItem);
   //console.log(req);
-  todos.push({text: body.newItem, date: body.newDate, urgency: body.newUrgency});
+  todos.push({text: body.newItem, date: body.newDate, urgency: body.newUrgency, user: body.user});
   //console.log(req.body.newItem);
   //console.log('success');
 
   var newItem = new todosDB({
     text: body.newItem,
     date: body.newDate,
-    urgency: body.newUrgency
+    urgency: body.newUrgency,
+    user: body.user
   });
 
   newItem.save((err) => {if (err) throw err});
@@ -76,16 +88,16 @@ app.post('/getAccess', (req, res) => {
   let body = JSON.parse(req.body);
 
   console.log(body);
-  if (body.username === 'test') {
+  if (body.username === 'test' || body.username === 'frank') {
     console.log('success');
-    res.send('true');
+    res.send({result: true});
   }
 
 });
 
 
 // Start server
-todosDB.find({}, (err, list) => {
+todosDB.find({user: 'test'}, (err, list) => {
   if (err) throw err;
   todos = list;
 

@@ -57,16 +57,17 @@ var db = mongoose.connection;
 var TodoItemSchema = new mongoose.Schema({
   text: String,
   date: String,
-  urgency: Number
+  urgency: Number,
+  user: String
 });
 
 var Todos = mongoose.model('Todos', TodoItemSchema);
 
-var userSchema = new mongoose.Schema({
-  username: {type: String, required: true},
-  password: {type: String, required: true},
-  todoList: [TodoItemSchema]
-});
+// var userSchema = new mongoose.Schema({
+//   username: {type: String, required: true},
+//   password: {type: String, required: true},
+//   todoList: [TodoItemSchema]
+// });
 
 
 // module.exports = {
@@ -79,10 +80,23 @@ var userSchema = new mongoose.Schema({
 var starter = new Todos({
   text: 'hello',
   date: '4/20',
-  urgency: 0
+  urgency: 0,
+  user: 'test'
 });
 
+// var User = mongoose.model('User', userSchema);
 
+// var test = new User({
+//   username: 'test',
+//   password: 'test',
+//   todoList: []
+// });
+
+// Todos.find({}, (err, res) => {
+//   test.todoList = res;
+// });
+
+// test.save((err) => {console.log(err)});
 
 Todos.find({text: 'hello', date: '4/20', urgency: 0}, (err, res) => {
   if (err) throw err;

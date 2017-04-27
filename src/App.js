@@ -10,7 +10,7 @@ class Home extends Component {
     super();
     this.state = {todos: []};
     var self = this;
-    fetch('/getTodos', {method: 'GET'}).then( (res) => {res.json().then( (r) => {self.setState({todos: r}); console.log(r); console.log(self.state.todos)} )} );
+    fetch('/getTodos', {method: 'POST', body: JSON.stringify({user: user})} ).then( (res) => {res.json().then( (r) => { self.setState({todos: r}) } )} );
 
     this.addTodo = this.addTodo.bind(this);
   }
@@ -22,7 +22,7 @@ class Home extends Component {
 
   addTodo(newData) {
 
-    var data = JSON.stringify({newItem: newData.textValue, newDate: newData.dateValue, newUrgency: newData.urgencyValue});
+    var data = JSON.stringify({newItem: newData.textValue, newDate: newData.dateValue, newUrgency: newData.urgencyValue, user: 'test'});
 
     fetch('/setTodos', {method: 'POST', body: data, header: {'Accept': 'application/json', 'Content-Type': 'application/json' }});
 
@@ -116,7 +116,7 @@ class NameForm extends React.Component {
   }
 
   handleUrgencyChange(event) {
-    this.setState(Object.assign({}, this.state, {urgencyValue: parseInt(event.target.value) || 0}));
+    this.setState(Object.assign({}, this.state, {urgencyValue: parseInt(event.target.value, 10) || 0}));
   }
 
   handleSubmit(event) {
@@ -148,11 +148,14 @@ class NameForm extends React.Component {
 
 var isLoggedIn = false;
 
+var user;
+
 class EnsureLoggedInContainer extends Component {
 
   render () {
+
     if (isLoggedIn) {
-      return (<AuthRequired />);
+      return (<Home/>);
     } else {
 
       return (<Redirect to="/login" />);
@@ -164,16 +167,15 @@ class EnsureLoggedInContainer extends Component {
 }
 
 
-class AuthRequired extends Component {
+// class AuthRequired extends Component {
 
-  render () {
-    return (<p>test</p>);
-  }
+//   render () {
+//     return (<p>test</p>);
+//   }
 
-}
+// }
 
-
-var redir;
+ 
 
 class Login extends Component {
   constructor (props) {
@@ -196,12 +198,12 @@ class Login extends Component {
 
   onClick () {
     let data = JSON.stringify({username: this.state.value});
-    console.log(data);
-    var self = this;
-    console.log(this.props);
+    //console.log(data);
+    //var self = this;
+    //console.log(this.props);
 
     fetch('/getAccess', {method: 'POST', body: data, header: {'Accept': 'application/json', 'Content-Type': 'application/json' }})
-    .then( (res) => { isLoggedIn = true; this.props.history.push('/authRequired') });
+    .then( (res) => { isLoggedIn = true; res.json().then( (r) => {console.log(r.result)}); user = this.state.value; this.props.history.push('/authRequired') });
 
     this.render();
   }
@@ -209,15 +211,15 @@ class Login extends Component {
   render () {
     return (
       <div>
-      <h1> Login</h1>
-      <div>
-        {redir}
-      </div>
-      <form onSubmit={this.handleSubmit}>
-        <p>Username:</p>
-        <input type="text" value={this.state.value} onChange={this.handleUsernameChange} />
-        <input type="submit" value="Login" onClick={this.onClick} />
-      </form>
+
+        <h1> Login </h1>
+        <h3> You must log-in to access your todo list. </h3>
+        
+        <form onSubmit={this.handleSubmit}>
+          <p>Username:</p>
+          <input type="text" value={this.state.value} onChange={this.handleUsernameChange} />
+          <input type="submit" value="Login" onClick={this.onClick} />
+        </form>
       </div>
 
 
@@ -264,7 +266,7 @@ class App extends Component {
       <Route path="/login" component={Login} />
 
       <Route component={EnsureLoggedInContainer}>
-        <Route path="/authRequired" component={AuthRequired} />
+        <Route path="/authRequired" component={Home} />
       </Route>
       
       <Route component={NotFound}/>
