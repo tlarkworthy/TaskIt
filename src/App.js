@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 //import logo from './logo.svg';
 import './App.css';
-import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Link, Switch, Redirect } from 'react-router-dom'
 import { createStore } from 'redux'
 
 class Home extends Component {
@@ -146,6 +146,86 @@ class NameForm extends React.Component {
   }
 }
 
+var isLoggedIn = false;
+
+class EnsureLoggedInContainer extends Component {
+
+  render () {
+    if (isLoggedIn) {
+      return (<AuthRequired />);
+    } else {
+
+      return (<Redirect to="/login" />);
+    }
+
+  }
+
+
+}
+
+
+class AuthRequired extends Component {
+
+  render () {
+    return (<p>test</p>);
+  }
+
+}
+
+
+var redir;
+
+class Login extends Component {
+  constructor (props) {
+    super(props);
+
+    this.state={value: ''};
+
+    this.handleUsernameChange = this.handleUsernameChange.bind(this);
+    this.onClick = this.onClick.bind(this);
+
+  }
+
+  handleUsernameChange (event) {
+    this.setState({value: event.target.value});
+  }
+
+  handleSubmit (event) {
+    event.preventDefault();
+  }
+
+  onClick () {
+    let data = JSON.stringify({username: this.state.value});
+    console.log(data);
+    var self = this;
+    console.log(this.props);
+
+    fetch('/getAccess', {method: 'POST', body: data, header: {'Accept': 'application/json', 'Content-Type': 'application/json' }})
+    .then( (res) => { isLoggedIn = true; this.props.history.push('/authRequired') });
+
+    this.render();
+  }
+
+  render () {
+    return (
+      <div>
+      <h1> Login</h1>
+      <div>
+        {redir}
+      </div>
+      <form onSubmit={this.handleSubmit}>
+        <p>Username:</p>
+        <input type="text" value={this.state.value} onChange={this.handleUsernameChange} />
+        <input type="submit" value="Login" onClick={this.onClick} />
+      </form>
+      </div>
+
+
+    )
+  }
+
+}
+
 const About = () => (
   <h2>About</h2>
 )
@@ -170,6 +250,8 @@ class App extends Component {
           <li><Link to="/">Home</Link></li>
           <li><Link to="/about">About</Link></li>
           <li><Link to="/topics">Topics</Link></li>
+          <li><Link to="/authRequired">Auth Test</Link></li>
+          <li><Link to="/login">Login</Link></li>
         </ul>
 
       <hr/>
@@ -178,7 +260,15 @@ class App extends Component {
       <Route exact path="/" component={Home}/>
       <Route path="/about" component={About}/>
       <Route path="/topics" component={Topics}/>
+      
+      <Route path="/login" component={Login} />
+
+      <Route component={EnsureLoggedInContainer}>
+        <Route path="/authRequired" component={AuthRequired} />
+      </Route>
+      
       <Route component={NotFound}/>
+
       </Switch>
 
       </div>

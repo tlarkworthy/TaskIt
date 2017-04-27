@@ -72,6 +72,17 @@ app.post('/setTodos', (req, res) => {
 
 });
 
+app.post('/getAccess', (req, res) => {
+  let body = JSON.parse(req.body);
+
+  console.log(body);
+  if (body.username === 'test') {
+    console.log('success');
+    res.send('true');
+  }
+
+});
+
 
 // Start server
 todosDB.find({}, (err, list) => {
