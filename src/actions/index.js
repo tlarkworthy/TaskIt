@@ -81,9 +81,11 @@ const registerUser = (newUser) => {
     let data = JSON.stringify(newUser);
 
     fetch('/newUser', {method: 'POST', body: data})
-      .then( (res) => {
-        dispatch({type: 'USER_REGISTERED', user: newUser.username});
-      });
+      .then( (res) => { res.json().then( (r) => {
+        dispatch({type: 'USER_REGISTERED', user: newUser.username, token: r.token});
+      })
+        
+    });
   }
 }
 

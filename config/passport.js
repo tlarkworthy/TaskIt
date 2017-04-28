@@ -9,9 +9,8 @@ module.exports = function(passpower){
   opts.secretOrKey = 'supersecret';
 
   passport.use(new JwtStrategy(opts, function(jwt_payload, done) {
-
       User.findOne({id: jwt_payload._id}, function(err, user) {
-      console.log(jwt_payload);
+
           if (err) {
               return done(err, false);
           }

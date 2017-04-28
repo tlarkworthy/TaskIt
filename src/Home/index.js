@@ -16,22 +16,8 @@ class Home extends Component {
 
     this.props.dispatch(actions.getTodos(this.props.currentUser, this.props.token));
 
-    this.addTodo = this.addTodo.bind(this);
   }
 
-  componentDidMount() {
-
-  }
-
-  addTodo(newData) {
-
-    var data = JSON.stringify({newItem: newData.textValue, newDate: newData.dateValue, newUrgency: newData.urgencyValue, user: this.props.currentUser});
-
-    fetch('/setTodos', {method: 'POST', body: data, header: {'Accept': 'application/json', 'Content-Type': 'application/json' }});
-
-    this.setState({todos: this.state.todos.concat([{text: newData.textValue, date: newData.dateValue, urgency: newData.urgencyValue, user: this.props.currentUser}])});
-    this.render();
-  }
 
   render() {
 

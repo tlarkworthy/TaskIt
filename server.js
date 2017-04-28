@@ -1,15 +1,8 @@
-// CIS 197 - React HW
-// Author - Devesh Dayal, Steve Vitali, Abhinav Suri
-// Simple Express server to serve static files
+
 var express = require('express');
 var path = require('path');
 var ejs = require('ejs');
-//import { createStore } from 'redux';
-
 var bodyParser = require('body-parser');
-//var todoApp = require('./reducers/todos');
-
-
 var todosDB = require('./db/mongo').Todos;
 var User = require('./db/mongo').User;
 var createNewUser = require('./db/mongo').createNewUser;
@@ -17,10 +10,21 @@ var createNewUser = require('./db/mongo').createNewUser;
 var bcrypt = require('bcrypt');
 
 var passport = require('passport');
+
+
 const jwt = require('jsonwebtoken');
 
 let app = express();
 const port = process.env.PORT || 3001;
+
+var sendEmail = require('./src/emailSender');
+
+
+
+
+
+
+
 
 app.set('port', port);
 
@@ -55,16 +59,7 @@ app.post('/getTodos', passport.authenticate('jwt', {session: false}), (req, res)
   
 });
 
-// app.post('/register', (req, res) => {
 
-//   let newUsername = JSON.parse(req.body).username;
-
-//   let newUser = createNewUser(newUsername, (err) => {
-//     if (err) throw err;
-//     res.send('success');
-//   });
-
-// });
 
 app.post('/setTodos', passport.authenticate('jwt', {session: false}), (req, res) => {
   var body = JSON.parse(req.body);
@@ -75,10 +70,16 @@ app.post('/setTodos', passport.authenticate('jwt', {session: false}), (req, res)
     date: body.newDate,
     urgency: body.newUrgency,
     user: body.user,
-    completed: body.completed
+    completed: body.completed,
+    email: body.email
   });
 
   newItem.save((err) => {if (err) throw err; res.send('success')} );
+
+
+  sendEmail(newItem);
+
+
 
 
 });
@@ -135,10 +136,26 @@ app.post('/newUser', (req, res) => {
     bcrypt.hash(userInfo.password, salt, (err, hash) => {
       if (err) throw err;
       newUser.password = hash;
-      newUser.save((e) => { if (e) throw e});
-      res.send('success');
+      newUser.save((e) => { 
+        if (e) throw e;
+
+        console.log(newUser);
+        User.findOne({username: userInfo.username}, (err, result) => {
+          if (err) throw err;
+
+          if (result) {
+            console.log(result);
+            const token = jwt.sign(result, 'supersecret', {
+                expiresIn: 604800
+              });
+            res.json({token: 'JWT ' + token});
+          } 
+        });
+    });
+
     })
-  })
+
+  });
  
 
 });

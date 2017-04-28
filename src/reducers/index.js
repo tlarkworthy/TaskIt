@@ -37,8 +37,8 @@ const reducer = (state, action) => {
       return Object.assign({}, state, {showCompleted: !state.showCompleted});
     }
 
-    case 'USER_REGISTERD' : {
-      return Object.assign({}, state, {loggedIn: true, currentUser: action.username});
+    case 'USER_REGISTERED' : {
+      return Object.assign({}, state, {loggedIn: true, currentUser: action.user, token: action.token});
     }
   }
 

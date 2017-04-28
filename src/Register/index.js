@@ -18,24 +18,15 @@ class Register extends Component {
     this.setState({[event.target.name]: event.target.value});
   }
 
-  onClick (event) {
-    // let data = JSON.stringify({username: this.state.value});
-
-    // fetch('/register', {method: 'POST', body: data})
-    //   .then( (res) => {
-    //     this.store.dispatch(actions.login(this.state.value));
-    //     this.props.history.push('/authRequired');
-    //   });
-
+  onClick () {
     this.props.dispatch(actions.registerUser({username: this.state.username, password: this.state.password}));
-
   }
 
   render () {
 
     if (this.props.loggedIn) {
-        return (<Redirect to="/authRequired" />)
-      }
+        return (<Redirect to="/" />)
+    }
       
     return (
 
@@ -53,13 +44,14 @@ class Register extends Component {
         <br />
         <button className="btn btn-me btn-default" type="button" value="Register" onClick={this.onClick}> Register </button>
       </div>
-      )
+    )
 
   }
 }
 
 const mapStateToProps = (state) => ({
-  loggedIn : state.loggedIn
+  loggedIn : state.loggedIn,
+  currentUser: state.currentUser
 })
 
 export default connect(mapStateToProps)(Register)

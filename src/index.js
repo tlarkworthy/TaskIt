@@ -8,7 +8,6 @@ import { reducer as reducers } from './reducers'
 import * as initialState from './initialState'
 import './index.css';
 
-import { createLogger } from "redux-logger"
 import thunk from "redux-thunk"
 import promise from "redux-promise-middleware"
 
