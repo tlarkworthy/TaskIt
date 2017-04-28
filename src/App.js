@@ -4,6 +4,8 @@ import './App.css';
 import { BrowserRouter as Router, Route, Link, Switch, Redirect } from 'react-router-dom'
 import { createStore } from 'redux'
 
+var sortByUrgency = false;
+
 class Home extends Component {
 
   constructor() {
@@ -22,18 +24,31 @@ class Home extends Component {
 
   addTodo(newData) {
 
-    var data = JSON.stringify({newItem: newData.textValue, newDate: newData.dateValue, newUrgency: newData.urgencyValue, user: 'test'});
+    var data = JSON.stringify({newItem: newData.textValue, newDate: newData.dateValue, newUrgency: newData.urgencyValue, user: user});
 
     fetch('/setTodos', {method: 'POST', body: data, header: {'Accept': 'application/json', 'Content-Type': 'application/json' }});
 
-    this.setState({todos: this.state.todos.concat([{text: newData.textValue, date: newData.dateValue, urgency: newData.urgencyValue}])});
+    this.setState({todos: this.state.todos.concat([{text: newData.textValue, date: newData.dateValue, urgency: newData.urgencyValue, user: user}])});
     this.render();
   }
 
   render() {
+    let self = this;
     var todos = [];
-    for (let i = 0; i < this.state.todos.length; i++) {
-      todos.push(<ToDoItem itemData={this.state.todos[i]} />);
+    let sortedArray = this.state.todos.slice();
+
+
+    console.log(sortedArray);
+
+    sortedArray.sort((a,b) => {
+
+      return sortByUrgency ? (b.urgency - a.urgency) : (Date.parse(a.date) - Date.parse(b.date))
+    });
+
+    console.log(sortedArray);
+
+    for (let i = 0; i < sortedArray.length; i++) {
+      todos.push(<ToDoItem itemData={sortedArray[i]} />);
     }
 
     //console.log(this.state.todos);
@@ -43,6 +58,7 @@ class Home extends Component {
             <ul>
               {todos}
             </ul>
+            <a href="" onClick={ (e) => {e.preventDefault(); sortByUrgency = !sortByUrgency; self.forceUpdate()}}> Sort by {sortByUrgency ? 'Date' : 'Urgency'} </a>
             </div>
 
     );
@@ -104,7 +120,12 @@ class NameForm extends React.Component {
   }
 
   onClick() {
-    this.props.onClick(this.state);
+    if (this.state.dateValue === '') {
+      window.alert("Please enter a date");
+    } else {
+      this.props.onClick(this.state);
+    }
+    
   }
 
   handleDateChange(event) {
@@ -203,7 +224,15 @@ class Login extends Component {
     //console.log(this.props);
 
     fetch('/getAccess', {method: 'POST', body: data, header: {'Accept': 'application/json', 'Content-Type': 'application/json' }})
-    .then( (res) => { isLoggedIn = true; res.json().then( (r) => {console.log(r.result)}); user = this.state.value; this.props.history.push('/authRequired') });
+      .then( (res) => { res.json().then( (r) => {
+      if (r.result) {
+        isLoggedIn = true;
+        user = this.state.value;
+        this.props.history.push('/authRequired');
+        
+      }
+    });   
+  });
 
     this.render();
   }
@@ -226,6 +255,45 @@ class Login extends Component {
     )
   }
 
+}
+
+
+class Register extends Component {
+
+  constructor (props) {
+    super(props);
+    this.state = {value: ''};
+
+    this.onClick = this.onClick.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange (event) {
+    this.setState({value: event.target.value});
+  }
+
+  onClick (event) {
+    let data = JSON.stringify({username: this.state.value});
+
+    fetch('/register', {method: 'POST', body: data})
+      .then( (res) => {
+        isLoggedIn = true;
+        user = this.state.value;
+        this.props.history.push('\authRequired');
+      });
+  }
+
+  render () {
+    return (
+      <div>
+        <h1>Register</h1>
+
+        <input type="text" value={this.state.value} onChange={this.handleChange} />
+        <input type="submit" value="Login" onClick={this.onClick} />
+      </div>
+      )
+
+  }
 }
 
 const About = () => (
@@ -264,6 +332,7 @@ class App extends Component {
       <Route path="/topics" component={Topics}/>
       
       <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
 
       <Route component={EnsureLoggedInContainer}>
         <Route path="/authRequired" component={Home} />

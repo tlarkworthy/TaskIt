@@ -7,52 +7,11 @@ mongoose.connect('mongodb://localhost/todolist', function (err) {
   } else if (err) {
     throw err;
   } else {
-    console.log('DB successfully connected. Adding seed data...');
+    console.log('DB successfully connected.');
   }
 });
 
 var db = mongoose.connection;
-
-// var keySchema = new mongoose.Schema({
-//   key: String
-// });
-
-// var reviewSchema = new mongoose.Schema({
-//   className: String,
-//   semester: String,
-//   rating: Number,
-//   text: String
-// });
-
-// var Key = mongoose.model('Key', keySchema);
-// var Reviews = mongoose.model('Reviews', reviewSchema);
-
-
-// var userSchema = new mongoose.Schema({
-//   name: String
-// });
-
-// var User = mongoose.model('User', userSchema);
-
-// var tyler = new User({
-//   name: 'Tyler'
-// });
-
-// tyler.save( (err) => {if (err) throw err; console.log("user saved")} );
-
-// User.find({}).remove((err) => {if (err) throw err; console.log('removed')});
-
-// User.find({name: 'Tyler'}, (err, user) => {
-//   console.log(user.length);
-//   for(let i = 0; i < user.length; i++) {
-//     console.log(i + ': ' + user[0].name);
-//   }
-// });
-
-
-//ayyyyyy lmao
-
-//ayyyy
 
 var TodoItemSchema = new mongoose.Schema({
   text: String,
@@ -63,19 +22,6 @@ var TodoItemSchema = new mongoose.Schema({
 
 var Todos = mongoose.model('Todos', TodoItemSchema);
 
-// var userSchema = new mongoose.Schema({
-//   username: {type: String, required: true},
-//   password: {type: String, required: true},
-//   todoList: [TodoItemSchema]
-// });
-
-
-// module.exports = {
-//   // Key: Key,
-//   Reviews: Reviews,
-//   mongoose: mongoose,
-//   db: db.collection('Reviews')
-// };
 
 var starter = new Todos({
   text: 'hello',
@@ -84,19 +30,17 @@ var starter = new Todos({
   user: 'test'
 });
 
-// var User = mongoose.model('User', userSchema);
+var userSchema = new mongoose.Schema({
+  username: String,
+});
+
+var User = mongoose.model('User', userSchema);
 
 // var test = new User({
-//   username: 'test',
-//   password: 'test',
-//   todoList: []
+//   username: 'test'
 // });
 
-// Todos.find({}, (err, res) => {
-//   test.todoList = res;
-// });
-
-// test.save((err) => {console.log(err)});
+//test.save((err) => {if (err) throw err});
 
 Todos.find({text: 'hello', date: '4/20', urgency: 0}, (err, res) => {
   if (err) throw err;
@@ -106,5 +50,13 @@ Todos.find({text: 'hello', date: '4/20', urgency: 0}, (err, res) => {
 });
 
 
+function createNewUser (name, cb) {
+  let newUser = new User({
+    username:name
+  });
 
-module.exports = Todos;
+  newUser.save((err) => { cb(err) });
+}
+
+
+module.exports = {Todos, User, createNewUser};
