@@ -14,44 +14,34 @@ var todosDB = require('./db/mongo').Todos;
 var User = require('./db/mongo').User;
 var createNewUser = require('./db/mongo').createNewUser;
 
+var bcrypt = require('bcrypt');
+
+var passport = require('passport');
+const jwt = require('jsonwebtoken');
+
 let app = express();
 const port = process.env.PORT || 3001;
 
 app.set('port', port);
 
-// Use the EJS rendering engine for HTML located in /views
 
-// app.set('views', __dirname + '/views');
-// app.engine('html', ejs.__express);
-// app.set('view engine', 'html');
 
-// Host static files on URL path
-
-// app.use(express.static(path.join(__dirname, 'public')));
-// app.use(bodyParser.urlencoded({extended: false}));
-
-// Use express Router middleware for root path
-//app.use(app.router);
-
-//var todos = [{text: 'hello', date: '4/30', urgency: 10}]; 
-
-//var store = createStore(todoApp);
-
-//console.log('hello');
 
 app.use(bodyParser.text());
 
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+require('./config/passport.js')(passport);
+
 app.get('/', (req, res) => {
-  res.render('index', {todosList: ['hi']});
+  res.render('index');
 });
 
-// app.post('/', (req, res) => {
-//   store.dispatch({type: 'ADD_TODO', text: req.body.newItem});
-//   todos.push(req.body.newItem);
-//   res.render('index', {todosList: todos});
-// });
 
-app.post('/getTodos', (req, res) => {
+
+app.post('/getTodos', passport.authenticate('jwt', {session: false}), (req, res) => {
 
 
   let username = JSON.parse(req.body).user;
@@ -65,48 +55,49 @@ app.post('/getTodos', (req, res) => {
   
 });
 
-app.post('/register', (req, res) => {
+// app.post('/register', (req, res) => {
 
-  let newUsername = JSON.parse(req.body).username;
+//   let newUsername = JSON.parse(req.body).username;
 
-  let newUser = createNewUser(newUsername, (err) => {
-    if (err) throw err;
-    res.send('success');
-  });
+//   let newUser = createNewUser(newUsername, (err) => {
+//     if (err) throw err;
+//     res.send('success');
+//   });
 
-});
+// });
 
-app.post('/setTodos', (req, res) => {
-  console.log(req.body);
+app.post('/setTodos', passport.authenticate('jwt', {session: false}), (req, res) => {
   var body = JSON.parse(req.body);
-  //console.log(body.newItem);
-  //console.log(req);
-  //todos.push({text: body.newItem, date: body.newDate, urgency: body.newUrgency, user: body.user});
-  //console.log(req.body.newItem);
-  //console.log('success');
+
 
   var newItem = new todosDB({
     text: body.newItem,
     date: body.newDate,
     urgency: body.newUrgency,
-    user: body.user
+    user: body.user,
+    completed: body.completed
   });
 
-  newItem.save((err) => {if (err) throw err});
+  newItem.save((err) => {if (err) throw err; res.send('success')} );
+
 
 });
 
 app.post('/getAccess', (req, res) => {
-  let body = JSON.parse(req.body);
+  var userInfo = JSON.parse(req.body);
 
-  console.log(body);
 
-  User.find({username: body.username}, (err, result) => {
+  User.findOne({username: userInfo.username}, (err, result) => {
     if (err) throw err;
 
-    if (result.length > 0) {
-      console.log('true');
-      res.json({result: true});
+    if (result) {
+      bcrypt.compare(userInfo.password, result.password, (e, r) => {
+        if (err) throw e;
+        const token = jwt.sign(result, 'supersecret', {
+          expiresIn: 604800
+        })
+        res.json({result: r, token: 'JWT ' + token});
+      })
     } else {
       res.json({result: false});
     }
@@ -114,6 +105,43 @@ app.post('/getAccess', (req, res) => {
 
 });
 
+
+app.post('/toggleCompleted', passport.authenticate('jwt', {session: false}), (req, res) => {
+
+  let todo = JSON.parse(req.body);
+
+  todosDB.findOneAndUpdate({text: todo.text, date: todo.date, urgency: todo.urgency, user: todo.user}, {completed: !todo.completed}, (err, result) => {
+    if (err) throw err;
+
+    res.send('success');
+  });
+
+
+});
+
+
+app.post('/newUser', (req, res) => {
+
+  let userInfo = JSON.parse(req.body);
+
+  let newUser = new User({
+      username: userInfo.username,
+      password: userInfo.password
+    });
+
+
+  bcrypt.genSalt(10, (err, salt) => {
+    if (err) throw err;
+    bcrypt.hash(userInfo.password, salt, (err, hash) => {
+      if (err) throw err;
+      newUser.password = hash;
+      newUser.save((e) => { if (e) throw e});
+      res.send('success');
+    })
+  })
+ 
+
+});
 
 // Start server
 

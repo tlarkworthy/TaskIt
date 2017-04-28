@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var bcrypt = require('bcryptjs');
 
 mongoose.connect('mongodb://localhost/todolist', function (err) {
   if (err && err.message.includes('ECONNREFUSED')) {
@@ -17,21 +18,17 @@ var TodoItemSchema = new mongoose.Schema({
   text: String,
   date: String,
   urgency: Number,
-  user: String
+  user: String,
+  completed: Boolean
 });
 
 var Todos = mongoose.model('Todos', TodoItemSchema);
 
 
-var starter = new Todos({
-  text: 'hello',
-  date: '4/20',
-  urgency: 0,
-  user: 'test'
-});
-
 var userSchema = new mongoose.Schema({
-  username: String,
+  username: {type: String, required: true},
+  password: {type: String, required: true},
+  email: {type: String}
 });
 
 var User = mongoose.model('User', userSchema);
@@ -48,6 +45,17 @@ Todos.find({text: 'hello', date: '4/20', urgency: 0}, (err, res) => {
     starter.save((err) => {if (err) throw err});
   }
 });
+
+
+var starter = new Todos({
+  text: 'hello',
+  date: '4/20',
+  urgency: 0,
+  user: 'test',
+  completed: false
+});
+
+
 
 
 function createNewUser (name, cb) {
