@@ -20,7 +20,9 @@ const port = process.env.PORT || 3001;
 var sendEmail = require('./src/emailSender');
 
 
-
+app.engine('html', require('ejs').__express);
+app.set('view engine', 'html');
+app.use(express.static(__dirname + '/build'));
 
 
 
@@ -70,12 +72,18 @@ app.post('/setTodos', passport.authenticate('jwt', {session: false}), (req, res)
     date: body.newDate,
     urgency: body.newUrgency,
     user: body.user,
-    completed: body.completed,
-    email: body.email
+    completed: body.completed
   });
 
   newItem.save((err) => {if (err) throw err; res.send('success')} );
 
+
+  User.findOne({username: newItem.user}, (err, result) => {
+    if (err) throw err;
+    if (result) {
+      newItem.email = result.email;
+    }
+  });
 
   sendEmail(newItem);
 
@@ -127,7 +135,8 @@ app.post('/newUser', (req, res) => {
 
   let newUser = new User({
       username: userInfo.username,
-      password: userInfo.password
+      password: userInfo.password,
+      email: userInfo.email
     });
 
 
