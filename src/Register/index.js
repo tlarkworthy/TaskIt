@@ -19,7 +19,7 @@ class Register extends Component {
   }
 
   onClick () {
-    this.props.dispatch(actions.registerUser({username: this.state.username, password: this.state.password}));
+    this.props.dispatch(actions.registerUser({username: this.state.username, password: this.state.password, email: this.state.email}));
   }
 
   render () {
